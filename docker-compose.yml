@@ -1,7 +1,0 @@
-services:
-  web:
-    ports:
-      - "8000:5000"
-    environment:
-      - IS_PERSISTENT=TRUE
-      - ALLOW_RESET=TRUE
