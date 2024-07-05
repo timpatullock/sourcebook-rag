@@ -4,8 +4,8 @@ import chromadb
 from langchain.chains.question_answering import load_qa_chain
 from dotenv import dotenv_values
 import os
-from langchain_community.chat_models import ChatOpenAI
-from langchain_community.embeddings import OpenAIEmbeddings
+from langchain_openai import ChatOpenAI
+from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import Chroma
 from update_collection import update_collection
 
@@ -25,8 +25,8 @@ def get_llm_response(query):
 
     #vectordb = Chroma(persist_directory="./chroma-store", embedding_function=OpenAIEmbeddings())
     matching_docs = vectordb.similarity_search(query)
-    answer = chain.run(input_documents=matching_docs, question=query)
-    return answer
+    answer = chain.invoke({"input_documents": matching_docs, "question": query})
+    return answer['output_text']
 
 
 # Streamlit UI
