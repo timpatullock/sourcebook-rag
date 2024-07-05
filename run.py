@@ -2,14 +2,12 @@
 import streamlit as st
 import chromadb
 from langchain.chains.question_answering import load_qa_chain
-from langchain.chat_models import ChatOpenAI
-from langchain.vectorstores import Chroma
-
-from langchain.text_splitter import CharacterTextSplitter
-from langchain.embeddings import OpenAIEmbeddings
 from dotenv import dotenv_values
-from pdf_tools import read_pdfs
-
+import os
+from langchain_community.chat_models import ChatOpenAI
+from langchain_community.embeddings import OpenAIEmbeddings
+from langchain_community.vectorstores import Chroma
+from update_collection import update_collection
 
 os.environ['OPENAI_API_KEY'] = dotenv_values('.env')['OPENAI_API_KEY'] # type: ignore
 
@@ -18,20 +16,6 @@ def create_agent_chain():
     llm = ChatOpenAI(model_name=model_name) # type: ignore
     chain = load_qa_chain(llm, chain_type="stuff")
     return chain
-
-def update_collection():
-    documents = read_pdfs()
-    if not documents:
-        print('No documents parsed, continuing.')
-        return
-    text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=10)
-    chunked_documents = text_splitter.split_documents(documents)
-    client = chromadb.HttpClient(host='localhost', port=8000)
-    embeddings = OpenAIEmbeddings()
-
-    db = Chroma(client=client, collection_name='sourcebooks', embedding_function=OpenAIEmbeddings())
-
-    db.add_documents(documents=chunked_documents, client=client, collection_name='sourcebooks', embedding=embeddings)
 
 
 def get_llm_response(query):
