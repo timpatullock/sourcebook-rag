@@ -1,13 +1,14 @@
-import os
+
 import streamlit as st
 import chromadb
 from langchain.chains.question_answering import load_qa_chain
 from langchain.chat_models import ChatOpenAI
 from langchain.vectorstores import Chroma
-from langchain.document_loaders import PyPDFLoader
+
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.embeddings import OpenAIEmbeddings
 from dotenv import dotenv_values
+from pdf_tools import read_pdfs
 
 
 os.environ['OPENAI_API_KEY'] = dotenv_values('.env')['OPENAI_API_KEY'] # type: ignore
@@ -18,14 +19,8 @@ def create_agent_chain():
     chain = load_qa_chain(llm, chain_type="stuff")
     return chain
 
-def update_chunks():
-    pdf_folder_path = "./data"
-    documents = []
-    for file in os.listdir(pdf_folder_path):
-        if file.endswith('.pdf'):
-            pdf_path = os.path.join(pdf_folder_path, file)
-            loader = PyPDFLoader(pdf_path)
-            documents.extend(loader.load())
+def update_collection():
+    documents = read_pdfs()
     if not documents:
         print('No documents parsed, continuing.')
         return
@@ -62,4 +57,4 @@ update = st.button("Update")
 if submit:
     st.write(get_llm_response(form_input))
 if update:
-    update_chunks()
+    update_collection()
