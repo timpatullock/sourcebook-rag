@@ -1,11 +1,9 @@
 
 import streamlit as st
-import chromadb
 from langchain.chains.question_answering import load_qa_chain
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
-from langchain_openai import OpenAIEmbeddings
-from langchain_community.vectorstores import Chroma
+from db_tools import get_db
 from update_collection import update_collection
 
 load_dotenv()
@@ -19,9 +17,7 @@ def create_agent_chain():
 
 def get_llm_response(query):
     chain = create_agent_chain()
-    client = chromadb.HttpClient(host='localhost', port=8000)
-    vectordb = Chroma(client=client, collection_name='sourcebooks', embedding_function=OpenAIEmbeddings())
-
+    vectordb = get_db()
     matching_docs = vectordb.similarity_search(query)
     answer = chain.invoke({"input_documents": matching_docs, "question": query})
     return answer['output_text']
