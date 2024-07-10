@@ -28,12 +28,11 @@ def clear_database():
     useServer = os.getenv('USE_CHROMA_SERVER')
     chromaHost = os.getenv('CHROMA_HOST') or CHROMA_DEFAULT_HOST
     chromaPort = int(os.getenv('CHROMA_PORT') or CHROMA_DEFAULT_PORT)
-    chromaCollection = os.getenv('CHROMA_COLLECTION') or CHROMA_DEFAULT_COLLECTION
     chromaPath = os.getenv('CHROMA_PATH') or CHROMA_DEFAULT_PATH
 
     if useServer:
         client = chromadb.HttpClient(host=chromaHost, port=chromaPort)
-        return Chroma(client=client, collection_name=chromaCollection, embedding_function=OpenAIEmbeddings())   
+        client.reset()
 
     else:        
         if os.path.exists(chromaPath):
@@ -69,3 +68,29 @@ def add_to_chroma(chunks: list[Document]):
             print('Persisted')
     else:
         print("✅ No new documents to add")
+
+def remove_from_chroma(ids_to_delete: list[str]): 
+    db = get_db()
+    db.delete(ids=ids_to_delete)
+
+    useServer = os.getenv('USE_CHROMA_SERVER')
+
+    if not useServer:
+        print('Persisting changes to file')
+        db.persist()
+        print('Persisted')
+
+def removeSourceFromDB(source: str):
+    vectordb = get_db()
+    results = vectordb.get(where={'source':source})['ids']
+    remove_from_chroma(results)
+
+def getUniqueSources() -> list[str]:
+    vectordb = get_db()
+    ids = vectordb.get(include=['metadatas'])
+    sources = []
+    for metadata in ids['metadatas']: 
+        if metadata['source'] not in sources:
+            sources.append(metadata['source'])
+
+    return sources

@@ -1,12 +1,13 @@
 from langchain_core.documents import Document
-from langchain_community.document_loaders import PyPDFDirectoryLoader
+from langchain_community.document_loaders import PyPDFDirectoryLoader, PyPDFLoader
 from langchain_text_splitters import CharacterTextSplitter
+import os
+from pathlib import Path
 
-def read_pdfs() -> list[Document]:
-    data_path = "./data"
-    print('Reading files from', data_path)
+def read_pdfs(location: str = 'data') -> list[Document]:
+    print('Reading files from', location)
     
-    document_loader = PyPDFDirectoryLoader(data_path)
+    document_loader = PyPDFDirectoryLoader(location)
     return document_loader.load()
 
 def split_documents(documents) -> list[Document]:
@@ -46,5 +47,27 @@ def calculate_chunk_ids(chunks: list[Document]) -> list[Document]:
 
         # Add it to the page meta-data.
         chunk.metadata["id"] = chunk_id
-
     return chunks
+        
+def read_uploaded_pdfs(uploaded_files: list) -> list[Document]:
+    # Create the temp directory if it doesn't already exist
+    print('Reading new files')
+    Path(f'{os.path.curdir}/tmp').mkdir(exist_ok=True)
+
+    documents: list[Document] = []
+    for uploaded_file in uploaded_files:
+        if uploaded_file is not None:
+            print(f'Reading {uploaded_file.name}')
+            # Create file in tmp directory to be read by the PDF loader, this is inherently dangerous on a public platform
+            # if a safer version exists (eg. reads parses directly from the blob), that would be fantastic
+            file_location = f'tmp/{uploaded_file.name}'
+            with open(file_location, mode='wb') as w:
+                w.write(uploaded_file.getvalue())
+            loader = PyPDFLoader(file_location)
+            documents.extend(loader.load())
+            # delete the generated file
+            os.remove(file_location)
+            
+    return documents
+
+        
