@@ -6,7 +6,9 @@ import streamlit as st
 st.header('Upload Sources')
 uploaded_files = st.file_uploader('Pick a PDF', type="pdf", accept_multiple_files=True)
 submit = st.button('Submit Files')
+
 st.header('Sources')
+
 for source in getUniqueSources():
     button = st.button(f'Delete "{os.path.basename(source)}"' )
     if button:
